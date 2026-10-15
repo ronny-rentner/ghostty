@@ -21,6 +21,40 @@
   </p>
 </p>
 
+## This fork
+
+The branch `debian` builds a Debian package of Ghostty's main branch (commit `a2e4403`). Ghostty's source is
+unchanged in the branch; every change to it is a patch in `debian/patches/`, applied during the build.
+
+### Changes over the original
+
+- **Debian packaging** (`debian/`), based on the PPA packaging of
+  [mkasberg/ghostty-ubuntu](https://github.com/mkasberg/ghostty-ubuntu), changed for Debian and Ghostty's main branch:
+  - builds with Zig 0.16 instead of 0.15, which Ghostty's main branch requires
+  - adds the missing build dependencies `blueprint-compiler (>= 0.20.0)`, `glslang-dev`, `libhwy-dev`,
+    `libsimdutf-dev` and `libspirv-cross-c-shared-dev`
+  - links Debian's highway library (`-fsys=highway`) instead of compiling a bundled copy
+  - passes the dependency cache to `zig build --system` as an absolute path, which translate-c's build requires
+  - uses the version in `VERSION` as it is, without rewriting it to "ubuntu-nightly"
+  - leaves out the PPA's patch that renames `bzip2` to `bz2`, since Debian ships `bzip2.pc`
+  - leaves out the PPA's patch that removes harfbuzz's `graphemes` cluster level, since Debian's harfbuzz has it
+- **`VERSION`**: the version a release tarball carries, `1.3.2-main+a2e4403`
+- **`debian/fetch-vendor-cache.sh`**: fetches the Zig dependencies into `vendor-zig-cache/`, except the libraries
+  taken from Debian
+- **Patches to Ghostty:**
+  - `003-iso-left-tab.patch`: maps the keysym `ISO_Left_Tab` to the tab key, so `ctrl+shift+tab` bindings match a
+    key remapped to Tab
+  - `004-encode-keys-unhandled-by-im.patch`: keys the input method leaves unhandled, such as Enter, reach the
+    program while a preedit is open
+  - `005-scroll-axis-lock.patch`: with `gtk-horizontal-tab-scroll = false`, locks each touchpad or TrackPoint
+    scroll to one direction
+
+### Building
+
+1. Install the build dependencies listed in `debian/control`, including `zig0.16`.
+2. Run `debian/fetch-vendor-cache.sh` from the source root.
+3. Run `dpkg-buildpackage -b -us -uc`.
+
 ## About
 
 Ghostty is a terminal emulator that differentiates itself by being
