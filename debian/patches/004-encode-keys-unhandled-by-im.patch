@@ -1,0 +1,19 @@
+Description: Encode keys the input method left unhandled while a preedit is open
+ An input method that keeps a preedit open while the keyboard is used normally
+ (voice typing) returns keys such as Enter as unhandled. Ghostty marked them as
+ composing, and the key encoder sends nothing while composing, so the key was
+ lost. Keys the input method handles while composing return earlier, so every
+ key reaching this call is the application's.
+--- a/src/apprt/gtk/class/surface.zig
++++ b/src/apprt/gtk/class/surface.zig
+@@ -1444,7 +1444,9 @@
+             .key = physical_key,
+             .mods = mods,
+             .consumed_mods = consumed_mods,
+-            .composing = priv.im_composing,
++            // keys the input method handled while composing returned above, so an open
++            // preedit must not keep this key from the application
++            .composing = false,
+             .utf8 = priv.im_buf[0..priv.im_len],
+             .unshifted_codepoint = keyval_unicode_unshifted,
+         }) catch |err| {

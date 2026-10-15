@@ -1,0 +1,4 @@
+002-harfbuzz.patch
+003-iso-left-tab.patch
+004-encode-keys-unhandled-by-im.patch
+005-scroll-axis-lock.patch
