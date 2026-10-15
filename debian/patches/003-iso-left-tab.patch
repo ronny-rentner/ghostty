@@ -1,0 +1,14 @@
+Description: Map ISO_Left_Tab to the tab key
+ Shift+Tab delivers the keysym ISO_Left_Tab. Without this entry a key remapped
+ to Tab (for example Caps Lock) falls back to its physical key when Shift is
+ held, so bindings such as ctrl+shift+tab=previous_tab do not match.
+--- a/src/apprt/gtk/key.zig
++++ b/src/apprt/gtk/key.zig
+@@ -577,6 +577,7 @@
+     .{ gdk.KEY_Escape, .escape },
+     .{ gdk.KEY_Return, .enter },
+     .{ gdk.KEY_Tab, .tab },
++    .{ gdk.KEY_ISO_Left_Tab, .tab },
+     .{ gdk.KEY_BackSpace, .backspace },
+     .{ gdk.KEY_Print, .print_screen },
+     .{ gdk.KEY_Pause, .pause },
