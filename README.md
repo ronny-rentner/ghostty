@@ -46,6 +46,9 @@ unchanged in the branch; every change to it is a patch in `debian/patches/`, app
     key remapped to Tab
   - `004-encode-keys-unhandled-by-im.patch`: keys the input method leaves unhandled, such as Enter, reach the
     program while a preedit is open
+  - `005-pass-on-horizontal-scroll.patch`: with `gtk-horizontal-tab-scroll = false`, horizontal scroll events are
+    left unhandled after forwarding, so a diagonal TrackPoint or touchpad scroll keeps scrolling vertically
+    (upstream pull request 14401)
 
 ### Building
 

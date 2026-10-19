@@ -1,0 +1,20 @@
+Description: Leave horizontal scroll events unhandled when tab scrolling is disabled
+ With gtk-horizontal-tab-scroll disabled, the sideways part of a scroll is
+ forwarded to the terminal and the event was then reported to GTK as handled.
+ During a diagonal TrackPoint or touchpad scroll this blocked the vertical
+ scrolling of the surface. The event is now reported as unhandled after the
+ forwarding, as proposed upstream in pull request 14401, which was closed
+ unreviewed by the vouch bot.
+--- a/src/apprt/gtk/class/surface.zig
++++ b/src/apprt/gtk/class/surface.zig
+@@ -3159,7 +3159,9 @@
+             return @intFromBool(false);
+         };
+
+-        return @intFromBool(true);
++        // reported as unhandled: a handled sideways event blocked the vertical
++        // scrolling of the surface during a diagonal scroll
++        return @intFromBool(false);
+     }
+
+     fn ecMouseScrollHorizontalReset(ud: ?*anyopaque) callconv(.c) c_int {
