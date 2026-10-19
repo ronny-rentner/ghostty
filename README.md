@@ -46,8 +46,6 @@ unchanged in the branch; every change to it is a patch in `debian/patches/`, app
     key remapped to Tab
   - `004-encode-keys-unhandled-by-im.patch`: keys the input method leaves unhandled, such as Enter, reach the
     program while a preedit is open
-  - `005-scroll-axis-lock.patch`: with `gtk-horizontal-tab-scroll = false`, locks each touchpad or TrackPoint
-    scroll to one direction
 
 ### Building
 
