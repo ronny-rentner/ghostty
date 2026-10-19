@@ -1,3 +1,10 @@
+ghostty (1.3.2~git20261015.a2e4403-7) forky; urgency=medium
+
+  * Leave horizontal scroll events unhandled when tab scrolling is disabled,
+    so a diagonal TrackPoint or touchpad scroll keeps scrolling vertically.
+
+ -- Local Build <local@build.invalid>  Mon, 19 Oct 2026 17:45:00 +0200
+
 ghostty (1.3.2~git20261015.a2e4403-6) forky; urgency=medium
 
   * Drop the scroll direction lock patch: it dropped the vertical part of
