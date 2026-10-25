@@ -1,0 +1,41 @@
+Description: Free the GPU memory of hidden tabs
+ Every hidden tab kept its last rendered picture, a full-size dma-buf of
+ 32 to 36 MiB on a 4K screen, until the tab was closed. Nothing reads it:
+ the renderer frees its buffers when the tab is hidden and draws a new
+ picture before the tab is shown again, and GTK drops the widget's cached
+ drawing on unmap. The picture is now released on unmap as well.
+--- a/src/apprt/gtk/class/render_surface.zig
++++ b/src/apprt/gtk/class/render_surface.zig
+@@ -106,6 +106,24 @@
+         self.as(gtk.Widget).queueDraw();
+     }
+
++    fn unmap(self: *Self) callconv(.c) void {
++        const priv = self.private();
++
++        // A hidden surface is redrawn before it is shown again (the
++        // renderer frees and rebuilds its buffers on occlusion), so the
++        // last presented frame has no reader until then. Dropping it
++        // here frees a full-size dma-buf per hidden tab.
++        if (priv.texture) |tex| {
++            tex.as(gobject.Object).unref();
++            priv.texture = null;
++        }
++
++        gtk.Widget.virtual_methods.unmap.call(
++            Class.parent,
++            self.as(gtk.Widget),
++        );
++    }
++
+     fn unrealize(self: *Self) callconv(.c) void {
+         const priv = self.private();
+
+@@ -446,6 +464,7 @@
+         fn init(class: *Class) callconv(.c) void {
+             // Virtual methods
+             gtk.Widget.virtual_methods.realize.implement(class, &realize);
++            gtk.Widget.virtual_methods.unmap.implement(class, &unmap);
+             gtk.Widget.virtual_methods.unrealize.implement(class, &unrealize);
+             gtk.Widget.virtual_methods.size_allocate.implement(class, &sizeAllocate);
+             gtk.Widget.virtual_methods.snapshot.implement(class, &snapshot);

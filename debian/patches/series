@@ -1,3 +1,4 @@
 003-iso-left-tab.patch
 004-encode-keys-unhandled-by-im.patch
 005-pass-on-horizontal-scroll.patch
+006-free-hidden-tab-frame.patch

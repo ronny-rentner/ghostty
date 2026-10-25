@@ -49,6 +49,8 @@ unchanged in the branch; every change to it is a patch in `debian/patches/`, app
   - `005-pass-on-horizontal-scroll.patch`: with `gtk-horizontal-tab-scroll = false`, horizontal scroll events are
     left unhandled after forwarding, so a diagonal TrackPoint or touchpad scroll keeps scrolling vertically
     (upstream pull request 14401)
+  - `006-free-hidden-tab-frame.patch`: a hidden tab releases its last rendered picture, 32 to 36 MiB on a 4K
+    screen, which it kept until the tab was closed although it is redrawn before it is shown again
 
 ### Building
 
