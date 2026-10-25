@@ -18,7 +18,7 @@ Build-Depends: debhelper-compat (= 13),
                libsimdutf-dev,
                libspirv-cross-c-shared-dev,
                libxml2-utils,
-               zig0.16
+               zig0.17
 
 Package: ghostty
 Architecture: any

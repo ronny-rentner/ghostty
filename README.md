@@ -23,14 +23,14 @@
 
 ## This fork
 
-The branch `debian` builds a Debian package of Ghostty's main branch (commit `a2e4403`). Ghostty's source is
+The branch `debian` builds a Debian package of Ghostty's main branch (commit `cec8b92`). Ghostty's source is
 unchanged in the branch; every change to it is a patch in `debian/patches/`, applied during the build.
 
 ### Changes over the original
 
 - **Debian packaging** (`debian/`), based on the PPA packaging of
   [mkasberg/ghostty-ubuntu](https://github.com/mkasberg/ghostty-ubuntu), changed for Debian and Ghostty's main branch:
-  - builds with Zig 0.16 instead of 0.15, which Ghostty's main branch requires
+  - builds with Zig 0.17 instead of 0.15, which Ghostty's main branch requires
   - adds the missing build dependencies `blueprint-compiler (>= 0.20.0)`, `glslang-dev`, `libhwy-dev`,
     `libsimdutf-dev` and `libspirv-cross-c-shared-dev`
   - links Debian's highway library (`-fsys=highway`) instead of compiling a bundled copy
@@ -38,7 +38,7 @@ unchanged in the branch; every change to it is a patch in `debian/patches/`, app
   - uses the version in `VERSION` as it is, without rewriting it to "ubuntu-nightly"
   - leaves out the PPA's patch that renames `bzip2` to `bz2`, since Debian ships `bzip2.pc`
   - leaves out the PPA's patch that removes harfbuzz's `graphemes` cluster level, since Debian's harfbuzz has it
-- **`VERSION`**: the version a release tarball carries, `1.3.2-main+a2e4403`
+- **`VERSION`**: the version a release tarball carries, `1.3.2-main+cec8b92`
 - **`debian/fetch-vendor-cache.sh`**: fetches the Zig dependencies into `vendor-zig-cache/`, except the libraries
   taken from Debian
 - **Patches to Ghostty:**
@@ -54,7 +54,7 @@ unchanged in the branch; every change to it is a patch in `debian/patches/`, app
 
 ### Building
 
-1. Install the build dependencies listed in `debian/control`, including `zig0.16`.
+1. Install the build dependencies listed in `debian/control`, including `zig0.17`.
 2. Run `debian/fetch-vendor-cache.sh` from the source root.
 3. Run `dpkg-buildpackage -b -us -uc`.
 

@@ -2,17 +2,16 @@
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 GHOSTTY_VERSION ?= $(shell cat VERSION)
-ZIG ?= zig0.16
+ZIG ?= zig0.17
 
 %:
 	dh $@
 
 override_dh_auto_install:
-	DESTDIR=$(CURDIR)/debian/ghostty $(ZIG) build \
+	DESTDIR=$(CURDIR)/debian/ghostty ZIG_GLOBAL_CACHE_DIR=$(CURDIR)/zig-cache $(ZIG) build \
 		--summary all \
 		--prefix /usr \
 		--system $(CURDIR)/vendor-zig-cache/p \
-		--global-cache-dir zig-cache \
 		-fsys=highway \
 		-Doptimize=ReleaseFast \
 		-Dcpu=baseline \
