@@ -1,0 +1,7 @@
+# build output of debhelper
+.debhelper/
+debhelper-build-stamp
+files
+*.substvars
+*.debhelper.log
+ghostty/
