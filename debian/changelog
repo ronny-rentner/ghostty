@@ -3,6 +3,8 @@ ghostty (1.3.2~git20261024.cec8b92-1) forky; urgency=medium
   * Update to Ghostty's main branch of 2026-10-24 (commit cec8b92), built
     with Zig 0.17, which it requires since 2026-10-20. Zig 0.17 dropped the
     --global-cache-dir option; the cache is set with ZIG_GLOBAL_CACHE_DIR.
+  * Fetch the dependencies with `zig build --fetch=all`: Zig 0.17's `zig fetch`
+    writes cache archives that `zig build` rejects with a hash mismatch.
   * Free the GPU memory of hidden tabs: every hidden tab kept its last
     rendered picture, 32 to 36 MiB on a 4K screen, until the tab was closed.
 

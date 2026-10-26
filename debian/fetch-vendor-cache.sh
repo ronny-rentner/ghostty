@@ -5,17 +5,7 @@ set -euo pipefail
 
 export ZIG_GLOBAL_CACHE_DIR=$PWD/vendor-zig-cache
 
-while IFS= read -r url; do
-    case "$url" in
-        # the build links these from Debian (zig build --system enables their system integration)
-        */freetype-*|*/harfbuzz-*|*/fontconfig-*|*/libpng-*|*/zlib-*|*/libxml2-*|*/oniguruma-*|*/gtk4-layer-shell-*)
-            continue ;;
-    esac
-    zig0.17 fetch "$url"
-done < build.zig.zon.txt
-
-# zig 0.16 keeps fetched packages as tarballs, but --system reads unpacked directories
-cd "$ZIG_GLOBAL_CACHE_DIR/p"
-for tarball in *.tar.gz; do
-    tar -xzf "$tarball"
-done
+# zig 0.17's `zig fetch <url>` writes cache archives that `zig build` later rejects with a hash mismatch (the
+# archive's root directory is kept); `zig build --fetch=all` fetches the whole dependency tree, writes correct
+# archives and unpacks the working copies into the local package directory, which --system reads
+ZIG_LOCAL_PKG_DIR=$ZIG_GLOBAL_CACHE_DIR/p zig0.17 build --fetch=all

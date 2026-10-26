@@ -39,8 +39,7 @@ unchanged in the branch; every change to it is a patch in `debian/patches/`, app
   - leaves out the PPA's patch that renames `bzip2` to `bz2`, since Debian ships `bzip2.pc`
   - leaves out the PPA's patch that removes harfbuzz's `graphemes` cluster level, since Debian's harfbuzz has it
 - **`VERSION`**: the version a release tarball carries, `1.3.2-main+cec8b92`
-- **`debian/fetch-vendor-cache.sh`**: fetches the Zig dependencies into `vendor-zig-cache/`, except the libraries
-  taken from Debian
+- **`debian/fetch-vendor-cache.sh`**: fetches the Zig dependencies into `vendor-zig-cache/`
 - **Patches to Ghostty:**
   - `003-iso-left-tab.patch`: maps the keysym `ISO_Left_Tab` to the tab key, so `ctrl+shift+tab` bindings match a
     key remapped to Tab
