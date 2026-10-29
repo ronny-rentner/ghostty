@@ -23,14 +23,14 @@
 
 ## This fork
 
-The branch `debian` builds a Debian package of Ghostty's main branch (commit `cec8b92`). Ghostty's source is
+The branch `debian` builds a Debian package of Ghostty's stable release `v1.4.0`. Ghostty's source is
 unchanged in the branch; every change to it is a patch in `debian/patches/`, applied during the build.
 
 ### Changes over the original
 
 - **Debian packaging** (`debian/`), based on the PPA packaging of
-  [mkasberg/ghostty-ubuntu](https://github.com/mkasberg/ghostty-ubuntu), changed for Debian and Ghostty's main branch:
-  - builds with Zig 0.17 instead of 0.15, which Ghostty's main branch requires
+  [mkasberg/ghostty-ubuntu](https://github.com/mkasberg/ghostty-ubuntu), changed for Debian and Ghostty 1.4.0:
+  - builds with Zig 0.17 instead of 0.15, which Ghostty 1.4.0 requires
   - adds the missing build dependencies `blueprint-compiler (>= 0.20.0)`, `glslang-dev`, `libhwy-dev`,
     `libsimdutf-dev` and `libspirv-cross-c-shared-dev`
   - links Debian's highway library (`-fsys=highway`) instead of compiling a bundled copy
@@ -38,7 +38,7 @@ unchanged in the branch; every change to it is a patch in `debian/patches/`, app
   - uses the version in `VERSION` as it is, without rewriting it to "ubuntu-nightly"
   - leaves out the PPA's patch that renames `bzip2` to `bz2`, since Debian ships `bzip2.pc`
   - leaves out the PPA's patch that removes harfbuzz's `graphemes` cluster level, since Debian's harfbuzz has it
-- **`VERSION`**: the version a release tarball carries, `1.3.2-main+cec8b92`
+- **`VERSION`**: the release version, `1.4.0`
 - **`debian/fetch-vendor-cache.sh`**: fetches the Zig dependencies into `vendor-zig-cache/`
 - **Patches to Ghostty:**
   - `003-iso-left-tab.patch`: maps the keysym `ISO_Left_Tab` to the tab key, so `ctrl+shift+tab` bindings match a
