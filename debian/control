@@ -1,7 +1,7 @@
 Source: ghostty
 Section: utils
 Priority: optional
-Maintainer: Mike Kasberg <kasberg.mike@gmail.com>
+Maintainer: Ronny Rentner <debian@ronny-rentner.de>
 Homepage: https://ghostty.org/
 Standards-Version: 4.6.2
 Build-Depends: debhelper-compat (= 13), 
