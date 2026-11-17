@@ -1,0 +1,36 @@
+Description: Honor system glslang selection in the C bindings
+Author: Ronny Rentner <debian@ronny-rentner.de>
+Forwarded: no
+
+--- a/pkg/glslang/build.zig
++++ b/pkg/glslang/build.zig
+@@ -11,8 +11,14 @@
+         .optimize = optimize,
+     });
+ 
+-    const lib = try buildGlslang(b, target, optimize);
+-    b.installArtifact(lib);
++    const lib: union(enum) {
++        system,
++        static: *std.Build.Step.Compile,
++    } = if (b.systemIntegrationOption("glslang", .{}))
++        .system
++    else
++        .{ .static = try buildGlslang(b, target, optimize) };
++    if (lib == .static) b.installArtifact(lib.static);
+ 
+     try translate_c.addImportToModule(b, "glslang_c", module, .{
+         .source = .{ .includes = .{
+@@ -23,7 +29,11 @@
+         } },
+         .target = target,
+         .optimize = optimize,
+-        .link_libs = &.{lib},
++        .link_system_libs = if (lib == .system) &.{
++            "glslang",
++            "glslang-default-resource-limits",
++        } else &.{},
++        .link_libs = if (lib == .static) &.{lib.static} else &.{},
+         .default_init = true,
+     });
+ 

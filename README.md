@@ -23,23 +23,10 @@
 
 ## This fork
 
-The branch `debian` builds a Debian package of Ghostty's stable release `v1.4.0`. Ghostty's source is
-unchanged in the branch; every change to it is a patch in `debian/patches/`, applied during the build.
-
 ### Changes over the original
 
-- **Debian packaging** (`debian/`), based on the PPA packaging of
-  [mkasberg/ghostty-ubuntu](https://github.com/mkasberg/ghostty-ubuntu), changed for Debian and Ghostty 1.4.0:
-  - builds with Zig 0.17 instead of 0.15, which Ghostty 1.4.0 requires
-  - adds the missing build dependencies `blueprint-compiler (>= 0.20.0)`, `glslang-dev`, `libhwy-dev`,
-    `libsimdutf-dev` and `libspirv-cross-c-shared-dev`
-  - links Debian's highway library (`-fsys=highway`) instead of compiling a bundled copy
-  - passes the dependency cache to `zig build --system` as an absolute path, which translate-c's build requires
-  - uses the version in `VERSION` as it is, without rewriting it to "ubuntu-nightly"
-  - leaves out the PPA's patch that renames `bzip2` to `bz2`, since Debian ships `bzip2.pc`
-  - leaves out the PPA's patch that removes harfbuzz's `graphemes` cluster level, since Debian's harfbuzz has it
-- **`VERSION`**: the release version, `1.4.0`
-- **`debian/fetch-vendor-cache.sh`**: fetches the Zig dependencies into `vendor-zig-cache/`
+- **Debian packaging** (`debian/`), based on the PPA packaging of [mkasberg/ghostty-ubuntu](https://github.com/mkasberg/ghostty-ubuntu):
+  - uses Debian's highway, glslang, spirv-cross and simdutf libraries through their `-fsys` options instead of compiling bundled copies
 - **Patches to Ghostty:**
   - `003-iso-left-tab.patch`: maps the keysym `ISO_Left_Tab` to the tab key, so `ctrl+shift+tab` bindings match a
     key remapped to Tab
@@ -50,12 +37,26 @@ unchanged in the branch; every change to it is a patch in `debian/patches/`, app
     (upstream pull request 14401)
   - `006-free-hidden-tab-frame.patch`: a hidden tab releases its last rendered picture, 32 to 36 MiB on a 4K
     screen, which it kept until the tab was closed although it is redrawn before it is shown again
+  - `007-desktop-notification-targets.patch`: lets `desktop-notifications` select `desktop`, `bell`, or
+    `desktop,bell`. Bell notifications use Ghostty's existing bell handling. `true` retains desktop-only
+    notifications; `false` disables both destinations.
+  - `008-system-glslang.patch`: updates `pkg/glslang/build.zig` to select system glslang when
+    `-fsys=glslang` is enabled, without also building bundled glslang
+  - `009-debian-glslang-link-dependencies.patch`: links the SPIR-V Tools and GNU C++ runtime required by
+    Debian's static glslang library
 
 ### Building
 
 1. Install the build dependencies listed in `debian/control`, including `zig0.17`.
-2. Run `debian/fetch-vendor-cache.sh` from the source root.
+2. Keep the Zig checkout alongside this checkout and run `debian/fetch-dependencies.sh` from the Ghostty
+   source root.
 3. Run `dpkg-buildpackage -b -us -uc`.
+
+Downloaded dependency archives and sources are stored in `../zig/cache/packages/`.
+The fetch command's compiler cache is `../zig/build/fetch-cache/`.
+`debian/rules` sets the compiler cache paths to `build/zig-local-cache/` and `build/zig-global-cache/`
+and directs Ghostty's build to place package files in `debian/ghostty/`. Its clean target leaves those
+cache directories intact.
 
 ## About
 

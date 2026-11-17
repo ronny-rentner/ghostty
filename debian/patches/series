@@ -2,3 +2,6 @@
 004-encode-keys-unhandled-by-im.patch
 005-pass-on-horizontal-scroll.patch
 006-free-hidden-tab-frame.patch
+007-desktop-notification-targets.patch
+008-system-glslang.patch
+009-debian-glslang-link-dependencies.patch

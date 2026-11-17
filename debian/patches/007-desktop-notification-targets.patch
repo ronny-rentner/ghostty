@@ -1,0 +1,80 @@
+Description: Select desktop and bell notification destinations
+Author: Ronny Rentner <github@ronny-rentner.de>
+Forwarded: no
+
+diff --git a/src/Surface.zig b/src/Surface.zig
+index 369bb2399..0e5b037e5 100644
+--- a/src/Surface.zig
++++ b/src/Surface.zig
+@@ -318,7 +318,7 @@ const DerivedConfig = struct {
+     middle_click_action: configpkg.MiddleClickAction,
+     confirm_close_surface: configpkg.ConfirmCloseSurface,
+     cursor_click_to_move: bool,
+-    desktop_notifications: bool,
++    desktop_notifications: configpkg.Config.DesktopNotifications,
+     font: font.SharedGridSet.DerivedConfig,
+     mouse_interval: u64,
+     mouse_hide_while_typing: bool,
+@@ -1015,7 +1015,7 @@ pub fn needsConfirmQuit(self: *Surface) bool {
+ /// Called from the app thread to handle mailbox messages to our specific
+ /// surface.
+ pub fn handleMessage(self: *Surface, msg: Message) !void {
+-    switch (msg) {
++    dispatch: switch (msg) {
+         .change_config => |config| try self.updateConfig(config),
+ 
+         .set_title => |*v| {
+@@ -1141,14 +1141,13 @@ pub fn handleMessage(self: *Surface, msg: Message) !void {
+         .child_exited => |v| self.childExited(v),
+ 
+         .desktop_notification => |notification| {
+-            if (!self.config.desktop_notifications) {
+-                log.info("application attempted to display a desktop notification, but 'desktop-notifications' is disabled", .{});
+-                return;
++            if (self.config.desktop_notifications.desktop) {
++                const title = std.mem.sliceTo(&notification.title, 0);
++                const body = std.mem.sliceTo(&notification.body, 0);
++                try self.showDesktopNotification(title, body);
+             }
+ 
+-            const title = std.mem.sliceTo(&notification.title, 0);
+-            const body = std.mem.sliceTo(&notification.body, 0);
+-            try self.showDesktopNotification(title, body);
++            if (self.config.desktop_notifications.bell) continue :dispatch .ring_bell;
+         },
+ 
+         .redraw => self.redraw(),
+diff --git a/src/config/Config.zig b/src/config/Config.zig
+index 19667ab70..ddc921923 100644
+--- a/src/config/Config.zig
++++ b/src/config/Config.zig
+@@ -3893,7 +3893,7 @@ else
+ 
+ /// If `true` (default), applications running in the terminal can show desktop
+ /// notifications using certain escape sequences such as OSC 9 or OSC 777.
+-@"desktop-notifications": bool = true,
++@"desktop-notifications": DesktopNotifications = .{ .desktop = true },
+ 
+ /// If `true` (default), applications running in the terminal can show
+ /// graphical progress bars using the ConEmu OSC 9;4 escape sequence.
+@@ -9368,6 +9368,19 @@ pub const BellFeatures = packed struct {
+     border: bool = false,
+ };
+ 
++pub const DesktopNotifications = packed struct {
++    desktop: bool = false,
++    bell: bool = false,
++
++    pub fn parseCLI(input_: ?[]const u8) !DesktopNotifications {
++        const input = input_ orelse "true";
++        // Preserve the original boolean setting: true enables only desktop notifications.
++        const desktop = cli.args.parseBool(input) catch
++            return cli.args.parsePackedStruct(DesktopNotifications, input);
++        return .{ .desktop = desktop };
++    }
++};
++
+ /// See mouse-shift-capture
+ pub const MouseShiftCapture = enum {
+     false,
+

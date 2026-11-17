@@ -1,3 +1,13 @@
+ghostty (1.4.0-3) forky; urgency=medium
+
+  * Allow terminal notifications to use the bell, desktop notifications,
+    or both.
+  * Use Debian's glslang, spirv-cross and simdutf libraries.
+  * Fix system glslang selection in the C bindings and link the dependencies
+    required by Debian's static glslang library.
+
+ -- Ronny Rentner <debian@ronny-rentner.de>  Fri, 06 Nov 2026 18:19:45 +0100
+
 ghostty (1.4.0-2) forky; urgency=medium
 
   * Set the Debian package maintainer to Ronny Rentner.

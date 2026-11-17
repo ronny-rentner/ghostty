@@ -1,0 +1,19 @@
+Description: Link dependencies of Debian's static glslang library
+Author: Ronny Rentner <debian@ronny-rentner.de>
+Forwarded: not-needed
+
+--- a/src/build/SharedDeps.zig
++++ b/src/build/SharedDeps.zig
+@@ -365,6 +365,12 @@
+                 "glslang-default-resource-limits",
+                 dynamic_link_opts,
+             );
++            step.root_module.linkSystemLibrary("SPIRV-Tools", dynamic_link_opts);
++            // Zig treats the library name stdc++ as its bundled libc++.
++            // Debian's static glslang requires the GNU runtime instead.
++            step.root_module.addObjectFile(.{
++                .cwd_relative = b.fmt("/usr/lib/{s}/libstdc++.so.6", .{try target.result.linuxTriple(b.allocator)}),
++            });
+         } else {
+             step.root_module.linkLibrary(glslang_dep.artifact("glslang"));
+             try static_libs.append(
