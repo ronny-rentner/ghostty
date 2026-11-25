@@ -1,0 +1,20 @@
+Description: Pulse GTK tab attention underlines over a 2.8-second cycle
+
+--- a/src/apprt/gtk/css/style.css
++++ b/src/apprt/gtk/css/style.css
+@@ -21,6 +21,15 @@
+   margin-right: 2px;
+ }
+ 
++@keyframes tab-attention-pulse {
++  0%, 100% { opacity: 0.25; }
++  50% { opacity: 1; }
++}
++
++tabbar tab.needs-attention indicator {
++  animation: tab-attention-pulse 2.8s ease-in-out infinite;
++}
++
+ window.ssd.no-border-radius {
+   /* Without clearing the border radius, at least on Mutter with
+    * gtk-titlebar=true and gtk-adwaita=false, there is some window artifacting

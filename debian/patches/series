@@ -9,3 +9,4 @@
 012-gtk-tab-tooltip.patch
 013-gtk-tab-height.patch
 014-gtk-tab-dividers.patch
+015-gtk-tab-attention-pulse.patch

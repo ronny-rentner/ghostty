@@ -50,6 +50,7 @@
     while open and refreshes when the tooltip opens again.
   - `013-gtk-tab-height.patch`: keeps tab height stable when titles and bell indicators change.
   - `014-gtk-tab-dividers.patch`: keeps dividers visible beside selected and hovered tabs, with 2px side margins on tabs.
+  - `015-gtk-tab-attention-pulse.patch`: pulses tab attention underlines over a 2.8-second cycle.
 
 ### Building
 
