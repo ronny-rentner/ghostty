@@ -1,0 +1,194 @@
+Description: Forward preedit text to applications with mode 2035
+Author: Ronny Rentner <github@ronny-rentner.de>
+Forwarded: no
+
+--- a/src/Surface.zig
++++ b/src/Surface.zig
+@@ -907,6 +907,7 @@
+             .write_small,
+             .write_stable,
+             .write_alloc,
++            .preedit,
+             => {
+                 msg.deinit();
+                 return;
+@@ -2221,7 +2222,7 @@
+ pub fn imePointScaled(self: *const Surface, scale: apprt.ContentScale) apprt.IMEPos {
+     self.renderer_state.mutex.lockUncancelable(global.io());
+     const cursor = self.renderer_state.terminal.screens.active.cursor;
+-    const preedit_width: usize = if (self.renderer_state.preedit) |preedit| preedit.width() else 0;
++    const preedit_width: usize = if (self.renderer_state.preeditForRender()) |preedit| preedit.width() else 0;
+     self.renderer_state.mutex.unlock(global.io());
+ 
+     // TODO: need to handle when scrolling and the cursor is not
+@@ -2694,6 +2695,17 @@
+ 
+     // Mark preedit dirty flag
+     self.io.terminal.flags.dirty.preedit = true;
++
++    if (self.io.terminal.modes.get(.preedit_forwarding)) {
++        self.queueIo(.{ .preedit = .{
++            .alloc = self.alloc,
++            .data = try std.fmt.allocPrint(
++                self.alloc,
++                "\x1b]2035;{s}\x1b\\",
++                .{preedit_ orelse ""},
++            ),
++        } }, .locked);
++    }
+ 
+     // If we have no text, we're done. We queue a render in case we cleared
+     // a prior preedit (likely).
+--- a/src/renderer/State.zig
++++ b/src/renderer/State.zig
+@@ -104,6 +104,12 @@
+     ) catch {};
+ }
+ 
++/// Return the preedit overlay unless the application enabled forwarding.
++pub fn preeditForRender(self: *const State) ?Preedit {
++    if (self.terminal.modes.get(.preedit_forwarding)) return null;
++    return self.preedit;
++}
++
+ pub const Mouse = struct {
+     /// The point on the viewport where the mouse currently is. We use
+     /// viewport points to avoid the complexity of mapping the mouse to
+@@ -198,6 +204,24 @@
+ 
+ const test_hangul_ga: u21 = 0xAC00; // U+AC00 HANGUL SYLLABLE GA
+ 
++test "preedit forwarding hides the overlay until disabled" {
++    const testing = std.testing;
++    var terminal = try terminalpkg.Terminal.init(testing.io, testing.allocator, .{ .cols = 10, .rows = 5 });
++    defer terminal.deinit(testing.allocator);
++    var mutex: std.Io.Mutex = .init;
++    const state: State = .{
++        .mutex = &mutex,
++        .terminal = &terminal,
++        .preedit = .{ .codepoints = &.{.{ .codepoint = 'a' }} },
++    };
++
++    try testing.expect(state.preeditForRender() != null);
++    terminal.modes.set(.preedit_forwarding, true);
++    try testing.expect(state.preeditForRender() == null);
++    terminal.modes.set(.preedit_forwarding, false);
++    try testing.expectEqual(@as(u21, 'a'), state.preeditForRender().?.codepoints[0].codepoint);
++}
++
+ test "preedit range covers exact cell width" {
+     const testing = std.testing;
+ 
+--- a/src/renderer/generic.zig
++++ b/src/renderer/generic.zig
+@@ -1501,7 +1501,7 @@
+ 
+                 // Get our preedit state
+                 const preedit: ?renderer.State.Preedit = preedit: {
+-                    const p = state.preedit orelse break :preedit null;
++                    const p = state.preeditForRender() orelse break :preedit null;
+                     break :preedit try p.clone(arena_alloc);
+                 };
+ 
+--- a/src/termio/stream_handler.zig
++++ b/src/termio/stream_handler.zig
+@@ -684,6 +684,8 @@
+             // Schedule a render since we changed colors
+             .reverse_colors => self.terminal.flags.dirty.reverse_colors = true,
+ 
++            .preedit_forwarding => self.terminal.flags.dirty.preedit = true,
++
+             // Origin resets cursor pos. This is called whether or not
+             // we're enabling or disabling origin mode and whether or
+             // not the value changed.
+--- a/src/terminal/modes.zig
++++ b/src/terminal/modes.zig
+@@ -403,6 +403,7 @@
+     .{ .name = "grapheme_cluster", .value = 2027 },
+     .{ .name = "report_color_scheme", .value = 2031 },
+     .{ .name = "report_visibility", .value = 2033, .default_configurable = false },
++    .{ .name = "preedit_forwarding", .value = 2035, .default_configurable = false },
+     .{ .name = "in_band_size_reports", .value = 2048 },
+     // Kitty clipboard protocol paste events. When set, a user-initiated
+     // paste sends an unsolicited OSC 5522 targets listing with a
+@@ -508,6 +509,26 @@
+     try testing.expectEqual(true, report.tag.ansi);
+ }
+ 
++test "preedit forwarding mode reports enable disable and reset" {
++    var state: ModeState = .{};
++    try testing.expect(!state.get(.preedit_forwarding));
++    try testing.expect(!defaultConfigurable(.preedit_forwarding));
++    for ([_]bool{ false, true, false }) |enabled| {
++        state.set(.preedit_forwarding, enabled);
++        const report = state.getReport(.{ .value = 2035 });
++        var buf: [Report.max_size]u8 = undefined;
++        var writer: std.Io.Writer = .fixed(&buf);
++        try report.encode(&writer);
++        try testing.expectEqualStrings(
++            if (enabled) "\x1b[?2035;1$y" else "\x1b[?2035;2$y",
++            writer.buffered(),
++        );
++    }
++    state.set(.preedit_forwarding, true);
++    state.reset();
++    try testing.expect(!state.get(.preedit_forwarding));
++}
++
+ test "getReport DECECM permanently reset" {
+     const state: ModeState = .{};
+     const report = state.getReport(.{ .value = 117, .ansi = false });
+--- a/src/terminal/stream.zig
++++ b/src/terminal/stream.zig
+@@ -4086,6 +4086,7 @@
+     }{
+         .{ .input = "\x1b[4$p", .mode = .insert },
+         .{ .input = "\x1b[?4$p", .mode = .slow_scroll },
++        .{ .input = "\x1b[?2035$p", .mode = .preedit_forwarding },
+         .{ .input = "\x1b[9999$p", .raw = .{ .mode = 9999, .ansi = true } },
+         .{ .input = "\x1b[?9999$p", .raw = .{ .mode = 9999, .ansi = false } },
+         .{ .input = "\x1b[4p" },
+--- a/include/ghostty/vt/modes.h
++++ b/include/ghostty/vt/modes.h
+@@ -93,6 +93,7 @@
+ #define GHOSTTY_MODE_GRAPHEME_CLUSTER (ghostty_mode_new(2027, false)) /**< Grapheme cluster mode */
+ #define GHOSTTY_MODE_COLOR_SCHEME_REPORT (ghostty_mode_new(2031, false)) /**< Report color scheme */
+ #define GHOSTTY_MODE_VISIBILITY_REPORT (ghostty_mode_new(2033, false)) /**< Report terminal visibility */
++#define GHOSTTY_MODE_PREEDIT_FORWARDING (ghostty_mode_new(2035, false)) /**< Forward preedit text */
+ #define GHOSTTY_MODE_IN_BAND_RESIZE   (ghostty_mode_new(2048, false)) /**< In-band size reports */
+ #define GHOSTTY_MODE_PASTE_EVENTS     (ghostty_mode_new(5522, false)) /**< Kitty clipboard protocol paste events */
+ /** @} */
+--- a/src/termio/message.zig
++++ b/src/termio/message.zig
+@@ -97,6 +97,9 @@
+     /// Write where the data is allocated and must be freed.
+     write_alloc: WriteReq.Alloc,
+ 
++    /// A preedit report written verbatim, without keyboard newline conversion.
++    preedit: WriteReq.Alloc,
++
+     /// The payload of the kitty_clipboard_grant_* messages. The
+     /// password is allocated and must be freed.
+     pub const KittyClipboardGrant = struct {
+@@ -123,7 +126,7 @@
+                 v.ptr.deinit();
+                 v.alloc.destroy(v.ptr);
+             },
+-            .write_alloc => |v| v.alloc.free(v.data),
++            .write_alloc, .preedit => |v| v.alloc.free(v.data),
+             .kitty_clipboard_grant_read,
+             .kitty_clipboard_grant_write,
+             => |v| v.alloc.free(v.pw),
+--- a/src/termio/Thread.zig
++++ b/src/termio/Thread.zig
+@@ -364,6 +364,10 @@
+                     self.flags.linefeed_mode,
+                 );
+             },
++            .preedit => |v| {
++                defer v.alloc.free(v.data);
++                try io.queueWrite(data, v.data, false);
++            },
+         }
+     }
+ 

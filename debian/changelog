@@ -1,3 +1,55 @@
+ghostty (1.4.0-11) forky; urgency=medium
+
+  * Reduce GTK tab label minimum height and line height by 8px.
+  * Keep tab dividers visible with horizontal margins around tabs.
+  * Drop the hidden-tab frame-release patch to avoid blank frames when switching tabs.
+
+ -- Ronny Rentner <debian@ronny-rentner.de>  Tue, 24 Nov 2026 21:48:44 +0100
+
+ghostty (1.4.0-10) forky; urgency=medium
+
+  * Show full tab titles and directories in tooltips without resetting their delay.
+  * Set a fixed line height for tab titles to prevent resizing when bells appear.
+
+ -- Ronny Rentner <debian@ronny-rentner.de>  Tue, 24 Nov 2026 09:46:22 +0100
+
+ghostty (1.4.0-9) forky; urgency=medium
+
+  * Restore upstream GTK tooltips by removing the tab-title tooltip patch.
+
+ -- Ronny Rentner <debian@ronny-rentner.de>  Tue, 24 Nov 2026 04:57:01 +0100
+
+ghostty (1.4.0-8) forky; urgency=medium
+
+  * Include the Debian revision in the About dialog and command-line version.
+
+ -- Ronny Rentner <debian@ronny-rentner.de>  Fri, 20 Nov 2026 06:14:41 +0100
+
+ghostty (1.4.0-7) forky; urgency=medium
+
+  * Include the ghostty terminfo alias alongside xterm-ghostty.
+
+ -- Ronny Rentner <debian@ronny-rentner.de>  Thu, 19 Nov 2026 14:07:53 +0100
+
+ghostty (1.4.0-6) forky; urgency=medium
+
+  * Show full tab titles above the working directory in GTK tab tooltips.
+
+ -- Ronny Rentner <debian@ronny-rentner.de>  Thu, 19 Nov 2026 13:06:11 +0100
+
+ghostty (1.4.0-5) forky; urgency=medium
+
+  * Add gtk-bell-icon to override the bell character in GTK titles.
+
+ -- Ronny Rentner <debian@ronny-rentner.de>  Wed, 18 Nov 2026 13:05:16 +0100
+
+ghostty (1.4.0-4) forky; urgency=medium
+
+  * Add optional preedit forwarding with mode 2035 and OSC 2035.
+  * Restore exclusion of the static library from the binary package.
+
+ -- Ronny Rentner <debian@ronny-rentner.de>  Tue, 17 Nov 2026 15:10:06 +0100
+
 ghostty (1.4.0-3) forky; urgency=medium
 
   * Allow terminal notifications to use the bell, desktop notifications,

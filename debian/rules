@@ -3,7 +3,8 @@
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 export ZIG_GLOBAL_CACHE_DIR = $(CURDIR)/build/zig-global-cache
 export ZIG_LOCAL_CACHE_DIR = $(CURDIR)/build/zig-local-cache
-GHOSTTY_VERSION ?= $(shell cat VERSION)
+# Keep the Debian revision in build metadata to preserve the stable release channel.
+GHOSTTY_VERSION ?= $(subst -,+debian.,$(shell dpkg-parsechangelog -SVersion))
 ZIG ?= zig0.17
 
 %:
@@ -24,6 +25,8 @@ override_dh_auto_install:
 		-Dpie=true \
 		-Demit-docs \
 		-Dversion-string=$(GHOSTTY_VERSION)
+
+	rm debian/ghostty/usr/lib/libghostty-vt.a
 
 	# Use Debian's directory for packaged zsh completions.
 	mv debian/ghostty/usr/share/zsh/site-functions debian/ghostty/usr/share/zsh/vendor-completions

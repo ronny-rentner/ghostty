@@ -1,0 +1,76 @@
+Description: Show full tab titles and directories in GTK tooltips
+ Populate the GTK tooltip on query and retain its text while visible.
+ Read the current title and directory when the tooltip opens again.
+
+diff --git a/src/apprt/gtk/class/window.zig b/src/apprt/gtk/class/window.zig
+index fe27453d9..7afc48e30 100644
+--- a/src/apprt/gtk/class/window.zig
++++ b/src/apprt/gtk/class/window.zig
+@@ -7,6 +7,7 @@ const gio = @import("gio");
+ const glib = @import("glib");
+ const gobject = @import("gobject");
+ const gtk = @import("gtk");
++const gtk_c = @import("gtk_c");
+ 
+ const i18n = @import("../../../os/main.zig").i18n;
+ const apprt = @import("../../../apprt.zig");
+@@ -514,6 +515,50 @@ pub const Window = extern struct {
+         return page;
+     }
+ 
++    fn tabTooltipHook(_: *gobject.SignalInvocationHint, _: c_uint, values: [*]const gobject.Value, _: ?*anyopaque) callconv(.c) c_int {
++        const widget = gobject.ext.cast(gtk.Widget, values[0].getObject().?).?;
++        const property: ?*gobject.ParamSpec = @ptrCast(gtk_c.g_object_class_find_property(
++            @ptrCast(widget.as(gobject.Object).f_g_type_instance.f_g_class.?),
++            "page",
++        ));
++        if ((property orelse return 1).f_value_type != adw.TabPage.getGObjectType()) return 1;
++        if (gobject.signalHandlerFind(widget.as(gobject.Object), .{ .func = true }, 0, 0, null, @ptrCast(@constCast(&tabTooltipQuery)), null) != 0) return 1;
++
++        var page: ?*adw.TabPage = null;
++        widget.as(gobject.Object).get("page", &page, @as(?[*:0]const u8, null));
++        const tab_page = page orelse return 1;
++        defer tab_page.unref();
++        if (gobject.ext.cast(Tab, tab_page.getChild()) == null) return 1;
++
++        const label = gtk.Label.new(null);
++        _ = label.as(gobject.Object).refSink();
++        label.setWrap(1);
++        label.setMaxWidthChars(50);
++        _ = gtk.Widget.signals.query_tooltip.connect(widget, *gtk.Label, tabTooltipQuery, label, .{ .destroyData = gtk.Label.unref });
++        return 1;
++    }
++
++    fn tabTooltipQuery(widget: *gtk.Widget, _: c_int, _: c_int, _: c_int, tooltip: *gtk.Tooltip, label: *gtk.Label) callconv(.c) c_int {
++        // GTK queries again on pointer movement; retain the text while it is visible.
++        if (label.as(gtk.Widget).getMapped() == 0) {
++            var page: ?*adw.TabPage = null;
++            widget.as(gobject.Object).get("page", &page, @as(?[*:0]const u8, null));
++            const tab_page = page orelse return 0;
++            defer tab_page.unref();
++            const tab = gobject.ext.cast(Tab, tab_page.getChild()) orelse return 0;
++            const pwd = if (tab.getActiveSurface()) |surface| surface.getPwd() else null;
++            if (pwd) |directory| {
++                const text = glib.strconcat(tab_page.getTitle(), "\n", directory.ptr, @as(?[*:0]const u8, null));
++                defer glib.free(text);
++                label.setText(text);
++            } else {
++                label.setText(tab_page.getTitle());
++            }
++        }
++        tooltip.setCustom(label.as(gtk.Widget));
++        return 1;
++    }
++
+     pub const SelectTab = union(enum) {
+         previous,
+         next,
+@@ -2313,6 +2358,8 @@ pub const Window = extern struct {
+             gobject.ext.ensureType(SplitTree);
+             gobject.ext.ensureType(Surface);
+             gobject.ext.ensureType(Tab);
++            // AdwTabBar exposes its header only as the sender of query-tooltip.
++            _ = gobject.signalAddEmissionHook(gobject.signalLookup("query-tooltip", gtk.Widget.getGObjectType()), 0, tabTooltipHook, null, null);
+             gtk.Widget.Class.setTemplateFromResource(
+                 class.as(gtk.Widget.Class),
+                 comptime gresource.blueprint(.{

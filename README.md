@@ -35,8 +35,6 @@
   - `005-pass-on-horizontal-scroll.patch`: with `gtk-horizontal-tab-scroll = false`, horizontal scroll events are
     left unhandled after forwarding, so a diagonal TrackPoint or touchpad scroll keeps scrolling vertically
     (upstream pull request 14401)
-  - `006-free-hidden-tab-frame.patch`: a hidden tab releases its last rendered picture, 32 to 36 MiB on a 4K
-    screen, which it kept until the tab was closed although it is redrawn before it is shown again
   - `007-desktop-notification-targets.patch`: lets `desktop-notifications` select `desktop`, `bell`, or
     `desktop,bell`. Bell notifications use Ghostty's existing bell handling. `true` retains desktop-only
     notifications; `false` disables both destinations.
@@ -44,19 +42,50 @@
     `-fsys=glslang` is enabled, without also building bundled glslang
   - `009-debian-glslang-link-dependencies.patch`: links the SPIR-V Tools and GNU C++ runtime required by
     Debian's static glslang library
+  - `010-preedit-forwarding.patch`: applications can enable preedit forwarding with mode 2035. OSC 2035
+    sets the complete UTF-8 preedit, including empty text. Ghostty hides its own preedit display while
+    forwarding is enabled; committed text uses normal input. Run `python3 test/preedit.py` to try it.
+  - `011-gtk-bell-icon.patch`: `gtk-bell-icon` overrides the default bell character in GTK titles.
+  - `012-gtk-tab-tooltip.patch`: shows the full tab title and directory in GTK tooltips. Text stays fixed
+    while open and refreshes when the tooltip opens again.
+  - `013-gtk-tab-height.patch`: keeps tab height stable when titles and bell indicators change.
+  - `014-gtk-tab-dividers.patch`: keeps dividers visible beside selected and hovered tabs, with 2px side margins on tabs.
 
 ### Building
 
 1. Install the build dependencies listed in `debian/control`, including `zig0.17`.
 2. Keep the Zig checkout alongside this checkout and run `debian/fetch-dependencies.sh` from the Ghostty
    source root.
-3. Run `dpkg-buildpackage -b -us -uc`.
 
-Downloaded dependency archives and sources are stored in `../zig/cache/packages/`.
-The fetch command's compiler cache is `../zig/build/fetch-cache/`.
-`debian/rules` sets the compiler cache paths to `build/zig-local-cache/` and `build/zig-global-cache/`
-and directs Ghostty's build to place package files in `debian/ghostty/`. Its clean target leaves those
-cache directories intact.
+```bash
+# Build
+dpkg-source --before-build .
+dh_prep
+systemd-run --user --scope --slice=background.slice debian/rules override_dh_auto_install
+
+# Test
+debian/ghostty/usr/bin/ghostty --gtk-single-instance=false
+
+# Debian packages
+systemd-run --user --scope --slice=background.slice dpkg-buildpackage -b -us -uc
+
+# Cleanup after testing/publication
+debian/rules clean
+```
+
+Dependencies are stored in `../zig/cache/packages/`, fetching uses `../zig/build/fetch-cache/`, and builds share
+`build/zig-local-cache/`, `build/zig-global-cache/` and the staging directory `debian/ghostty/`.
+Inspect artifacts before and after builds; preserve the compiler caches and remove published `.deb`, `.changes` and `.buildinfo` files from the parent directory after publication.
+
+To prune unused compiled cache outputs manually, run this when no other build is using the caches.
+
+```bash
+systemd-run --user --scope --slice=background.slice debian/clean-cache.py
+```
+
+The script traces the existing Debian build target, then removes output directories that build did not
+access. It retains compiler metadata and removes its staging files and trace afterward. Changed sources
+can trigger compilation during this pass. Normal builds do not call this script.
 
 ## About
 

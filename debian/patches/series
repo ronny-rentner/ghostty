@@ -1,7 +1,11 @@
 003-iso-left-tab.patch
 004-encode-keys-unhandled-by-im.patch
 005-pass-on-horizontal-scroll.patch
-006-free-hidden-tab-frame.patch
 007-desktop-notification-targets.patch
 008-system-glslang.patch
 009-debian-glslang-link-dependencies.patch
+010-preedit-forwarding.patch
+011-gtk-bell-icon.patch
+012-gtk-tab-tooltip.patch
+013-gtk-tab-height.patch
+014-gtk-tab-dividers.patch

@@ -1,10 +1,8 @@
 
 ## Commands
 
-- **Build:** `zig build`
-  - If you're on macOS and don't need to build the macOS app, use
-    `-Demit-macos-app=false` to skip building the app bundle and speed up
-    compilation.
+Follow the [build, test, packaging and cleanup instructions](README.md#building).
+
 - **Test (Zig):** `zig build test`
   - Prefer to run targeted tests with `-Dtest-filter` because the full
     test suite is slow to run.

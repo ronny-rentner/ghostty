@@ -1,0 +1,39 @@
+Description: Allow overriding the bell character in GTK titles
+Author: Ronny Rentner <github@ronny-rentner.de>
+Forwarded: no
+
+--- a/src/apprt/gtk/class/tab.zig
++++ b/src/apprt/gtk/class/tab.zig
+@@ -519,7 +519,7 @@ pub const Tab = extern struct {
+ 
+         // If our bell is ringing, then we prefix the bell icon to the title.
+         if (bell_ringing and config.@"bell-features".title) {
+-            buf.writer.writeAll("🔔 ") catch {};
++            buf.writer.print("{s} ", .{config.@"gtk-bell-icon" orelse "🔔"}) catch return glib.ext.dupeZ(u8, plain);
+         }
+ 
+         // If we're zoomed, prefix with the magnifying glass emoji.
+--- a/src/config/Config.zig
++++ b/src/config/Config.zig
+@@ -3304,6 +3304,8 @@ keybind: Keybinds = .{},
+ ///
+ ///    Prepend a bell emoji (🔔) to the title of the alerted surface until the
+ ///    terminal is re-focused or interacted with (such as on keyboard input).
++///    On GTK, `gtk-bell-icon` overrides the default bell emoji with the
++///    specified text. Leaving it unset keeps the default emoji.
+ ///
+ ///  * `border`
+ ///
+@@ -3823,6 +3825,12 @@ else
+ /// Available since: 1.4.0
+ @"gtk-tabs-inverted": bool = false,
+ 
++/// Text to use for the bell indicator in the title.
++/// If unset, the default bell emoji (🔔) is used.
++///
++/// Example: `🕭`.
++@"gtk-bell-icon": ?[:0]const u8 = null,
++
+ /// If this is `true`, the titlebar will be hidden when the window is maximized,
+ /// and shown when the titlebar is unmaximized. GTK only.
+ ///

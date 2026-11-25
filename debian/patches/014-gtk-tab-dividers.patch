@@ -1,0 +1,21 @@
+Description: Keep dividers visible beside selected and hovered GTK tabs
+ Leave the leading divider hidden and add horizontal margins to tabs.
+
+--- a/src/apprt/gtk/css/style.css
++++ b/src/apprt/gtk/css/style.css
+@@ -12,6 +12,15 @@
+   line-height: 22px;
+ }
+ 
++tabbar tabbox > separator:not(:first-child) {
++  opacity: 1;
++}
++
++tabbar tab {
++  margin-left: 2px;
++  margin-right: 2px;
++}
++
+ window.ssd.no-border-radius {
+   /* Without clearing the border radius, at least on Mutter with
+    * gtk-titlebar=true and gtk-adwaita=false, there is some window artifacting
