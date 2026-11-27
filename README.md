@@ -48,7 +48,7 @@
   - `011-gtk-bell-icon.patch`: `gtk-bell-icon` overrides the default bell character in GTK titles.
   - `012-gtk-tab-tooltip.patch`: shows the full tab title and directory in GTK tooltips. Text stays fixed
     while open and refreshes when the tooltip opens again.
-  - `013-gtk-tab-height.patch`: keeps tab height stable when titles and bell indicators change.
+  - `013-gtk-tab-height.patch`: reserves room for bell indicators with a minimum label height that scales with the font size.
   - `014-gtk-tab-dividers.patch`: keeps dividers visible beside selected and hovered tabs, with 2px side margins on tabs.
   - `015-gtk-tab-attention-pulse.patch`: pulses tab attention underlines over a 2.8-second cycle.
 
@@ -57,6 +57,10 @@
 1. Install the build dependencies listed in `debian/control`, including `zig0.17`.
 2. Keep the Zig checkout alongside this checkout and run `debian/fetch-dependencies.sh` from the Ghostty
    source root.
+
+Build → test → package → push source → publish package → clean up.
+Continue to packaging only after the test passes. Keep patches applied between these stages;
+`dpkg-buildpackage` runs `--after-build` when packaging finishes.
 
 ```bash
 # Build
@@ -67,10 +71,19 @@ systemd-run --user --scope --slice=background.slice debian/rules override_dh_aut
 # Test
 debian/ghostty/usr/bin/ghostty --gtk-single-instance=false
 
-# Debian packages
-systemd-run --user --scope --slice=background.slice dpkg-buildpackage -b -us -uc
+# Package without pre-cleaning
+systemd-run --user --scope --slice=background.slice dpkg-buildpackage -nc -b -us -uc
 
-# Cleanup after testing/publication
+# Commit and push source
+git add -A
+git commit -m "Update Ghostty to $(dpkg-parsechangelog -SVersion)"
+git push origin debian
+```
+
+Publish the package using the [apt repository instructions](../debian/README.md#adding-a-package),
+then return to this checkout for cleanup:
+
+```bash
 debian/rules clean
 ```
 

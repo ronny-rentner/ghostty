@@ -2,7 +2,7 @@ Description: Pulse GTK tab attention underlines over a 2.8-second cycle
 
 --- a/src/apprt/gtk/css/style.css
 +++ b/src/apprt/gtk/css/style.css
-@@ -21,6 +21,15 @@
+@@ -20,6 +20,15 @@
    margin-right: 2px;
  }
  

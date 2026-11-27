@@ -1,3 +1,11 @@
+ghostty (1.4.0-13) forky; urgency=medium
+
+  * Scale the tab label minimum height with the interface font size while
+    preserving room for bell indicators.
+  * Restore normal line height for tab titles.
+
+ -- Ronny Rentner <debian@ronny-rentner.de>  Thu, 26 Nov 2026 10:14:43 +0100
+
 ghostty (1.4.0-12) forky; urgency=medium
 
   * Make tabs requesting attention easier to notice with a slowly pulsing
